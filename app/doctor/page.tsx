@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner"; 
+import { createPrescription } from "./actions"; // <--- ADD THIS
 
 // Types for our Medicine Entry
 type Medicine = {
@@ -52,27 +53,42 @@ export default function DoctorDashboard() {
     }
   };
 
-  const handlePrescribe = () => {
-    // Basic Validation Check
-    const isValid = medicines.every(m => m.name && m.dosage);
-    
+  const handlePrescribe = async () => {
+    // 1. Validation
+    const isValid = medicines.every((m) => m.name && m.dosage);
     if (!isValid) {
       toast.error("Incomplete Prescription", {
-        description: "Please fill in Medicine Name and Dosage for all rows."
+        description: "Please fill in Medicine Name and Dosage for all rows.",
       });
       return;
     }
 
-    console.log("Prescribing:", { patient: patient.nic, medicines });
-    
-    // Success Toast
-    toast.success("Prescription Issued Successfully", {
-      description: `Prescription ID: PRES-${Math.floor(Math.random() * 10000)}`,
-      action: {
-        label: "Undo",
-        onClick: () => console.log("Undo"),
-      },
-    });
+    try {
+      // 2. Prepare the data for the Server Action
+      const formData = new FormData();
+      formData.append("patient_id", patient.nic); // Assuming you link via NIC
+      
+      // Since 'medicines' is an array, we usually stringify it to send via FormData
+      // Make sure your Server Action parses this JSON!
+      formData.append("medicines", JSON.stringify(medicines));
+
+      // 3. CALL THE SERVER ACTION
+      // This is the line that was missing!
+      console.log("Triggering Server Action..."); // Look for this in Browser Console
+      await createPrescription(formData);
+
+      // 4. Success Handling
+      toast.success("Prescription Issued Successfully", {
+        description: `Saved to Database for ${patient.name}`,
+      });
+
+      // Optional: Clear form
+      // setMedicines([{ id: Date.now(), name: "", dosage: "", frequency: "", duration: "" }]);
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save prescription");
+    }
   };
 
   return (
