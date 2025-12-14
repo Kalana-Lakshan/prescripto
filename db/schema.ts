@@ -64,3 +64,21 @@ export const accessRequests = pgTable("access_requests", {
   status: text("status").default("pending").notNull(), 
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// ... keep existing imports ...
+
+// 6. PHARMACIES TABLE
+export const pharmacies = pgTable("pharmacies", {
+  id: serial("id").primaryKey(),
+  
+  // Login Info
+  licenseNumber: text("license_number").notNull().unique(), // This works like the SLMC/NIC
+  password: text("password").notNull(),
+  
+  // Business Info
+  name: text("name").notNull(), // e.g., "City Care Pharmacy"
+  address: text("address").notNull(),
+  phone: text("phone"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
