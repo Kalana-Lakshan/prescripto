@@ -51,12 +51,12 @@ export default function Home() {
           <CardContent className="space-y-3 pt-4">
             <Link href="/patient/login" className="w-full">
               <Button className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg shadow-green-200 shadow-lg">
-                Patient Sign In
+                Patient Login
               </Button>
             </Link>
             <Link href="/register" className="w-full block">
               <Button variant="ghost" className="w-full text-slate-600 hover:text-green-700 hover:bg-green-50">
-                Create Account
+                Register New Patient
               </Button>
             </Link>
           </CardContent>
@@ -80,7 +80,7 @@ export default function Home() {
             </Link>
             <Link href="/register-pharmacy" className="w-full block">
               <Button variant="ghost" className="w-full text-slate-600 hover:text-amber-600 hover:bg-amber-50">
-                Register Pharmacy
+                Register New Pharmacy
               </Button>
             </Link>
           </CardContent>

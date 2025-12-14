@@ -1,15 +1,13 @@
 "use server";
 
 import { db } from "@/db";
-import { accessRequests } from "@/db/schema";
+import { accessRequests, doctors } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { unstable_noStore as noStore } from "next/cache"; // <--- IMPORT THIS
-import { doctors } from "@/db/schema";
+import { unstable_noStore as noStore } from "next/cache"; 
 
 export async function getQueue(slmc: string) {
-  noStore(); // <--- ADD THIS LINE (Forces fresh data)
+  noStore(); // Forces fresh data
   
-  console.log(`Checking queue for doctor: ${slmc}`); // Debug Log
   try {
     const queue = await db.select()
       .from(accessRequests)
@@ -41,14 +39,20 @@ export async function acceptPatient(reqId: number) {
   }
 }
 
-// 3. NEW: Fetch Doctor Name by SLMC
+// 3. UPDATED: Fetch ALL Doctor Details
 export async function getDoctorProfile(slmc: string) {
+  noStore(); // Force fresh data here too
+  
   try {
-    const doctor = await db.select({ name: doctors.name })
+    // CHANGE: Removed { name: doctors.name } to select ALL columns
+    const doctor = await db.select()
       .from(doctors)
       .where(eq(doctors.slmcNumber, slmc))
       .limit(1);
     
+    // Debug Log: Use this to verify data in your terminal
+    console.log("Fetched Doctor Profile:", doctor[0]); 
+
     return doctor[0] || null;
   } catch (error) {
     console.error("Error fetching doctor:", error);

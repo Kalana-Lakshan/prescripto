@@ -1,135 +1,200 @@
 "use client";
 
 import React, { useEffect, useState, use } from "react";
-import { getPatientDashboardData } from "./actions";
+import { getPatientDashboardData, uploadMedicalReport } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, FileText, AlertTriangle, Home, Activity } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, FileText, UploadCloud, Pill, Download, Calendar } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 
 export default function PatientDashboard({ params }: { params: Promise<{ nic: string }> }) {
   const { nic } = use(params);
   const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    async function loadData() {
-      const result = await getPatientDashboardData(nic);
-      setData(result);
-      setLoading(false);
-    }
     loadData();
   }, [nic]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50">Loading Dashboard...</div>;
-  if (!data) return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-red-500">Account not found.</div>;
+  async function loadData() {
+    const result = await getPatientDashboardData(nic);
+    setData(result);
+  }
 
-  const { profile, history } = data;
+  async function handleUpload(formData: FormData) {
+    setIsUploading(true);
+    const result = await uploadMedicalReport(formData);
+    
+    if (result.success) {
+      toast.success("Report Uploaded Successfully!");
+      loadData(); // Refresh list
+    } else {
+      toast.error(result.error || "Upload Failed");
+    }
+    setIsUploading(false);
+  }
+
+  if (!data) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+
+  const { profile, history, reports } = data;
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         
-        {/* HEADER: Profile Summary */}
-        <Card className="border-t-4 border-blue-600 shadow-md">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-4 rounded-full">
-                <User className="h-8 w-8 text-blue-700" />
+        {/* Header */}
+        <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+           <div className="flex items-center gap-4">
+              <div className="bg-green-100 p-3 rounded-full">
+                <User className="h-6 w-6 text-green-700" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold text-slate-900">{profile.name}</CardTitle>
-                <CardDescription>NIC: {profile.nic}</CardDescription>
+                <h1 className="text-2xl font-bold text-slate-800">{profile.name}</h1>
+                <p className="text-slate-500 text-sm">NIC: {profile.nic}</p>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-2 text-slate-600">
-               <Home className="h-4 w-4" />
-               <span>{profile.address || "No Address Provided"}</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-600">
-               <Activity className="h-4 w-4" />
-               <span>Blood Type: <span className="font-bold">{profile.bloodType || "N/A"}</span></span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ALERTS SECTION */}
-        <Card className="bg-red-50 border border-red-100 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-red-800 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" /> Allergies & Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-             <div className="flex flex-wrap gap-2">
-                {Array.isArray(profile.allergies) && profile.allergies.length > 0 
-                  ? profile.allergies.map((alg: string, i: number) => (
-                      <span key={i} className="px-3 py-1 bg-white text-red-600 text-sm font-medium border border-red-200 rounded-full">
-                        {alg}
-                      </span>
-                    ))
-                  : <span className="text-sm text-slate-500">No known allergies recorded.</span>
-                }
-             </div>
-          </CardContent>
-        </Card>
-
-        {/* MEDICAL HISTORY / PRESCRIPTIONS */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              Past Prescriptions & Reports
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {history.length === 0 ? (
-              <div className="text-center py-10 text-slate-400">
-                No medical records found.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {history.map((record: any) => (
-                  <div key={record.id} className="border rounded-lg p-4 hover:bg-slate-50 transition bg-white">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-slate-800">
-                        Prescription #{record.id}
-                      </span>
-                      <span className="text-sm text-slate-500 bg-slate-100 px-2 py-1 rounded">
-                        {new Date(record.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {/* Medicines List */}
-                    <div className="text-sm text-slate-600 mt-2">
-                      <p className="font-medium text-xs text-slate-400 uppercase mb-1">Medicines Prescribed:</p>
-                      <ul className="list-disc pl-5 space-y-1">
-                        {Array.isArray(record.medicines) ? (
-                            record.medicines.map((med: any, i: number) => (
-                                <li key={i}>
-                                    {med.name || med.drug} - {med.dosage} ({med.frequency})
-                                </li>
-                            ))
-                        ) : (
-                            <li>Details unavailable</li>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* LOGOUT / BACK BUTTON */}
-        <div className="text-center">
-            <Link href="/">
-                <Button variant="outline">Sign Out</Button>
-            </Link>
+           </div>
+           <Link href="/">
+             <Button variant="outline">Sign Out</Button>
+           </Link>
         </div>
 
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="prescriptions" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-12">
+            <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
+            <TabsTrigger value="reports">Medical Reports</TabsTrigger>
+            <TabsTrigger value="profile">My Profile</TabsTrigger>
+          </TabsList>
+
+          {/* 1. PRESCRIPTION HISTORY */}
+          <TabsContent value="prescriptions" className="mt-6">
+             <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Pill className="h-5 w-5 text-blue-600" /> Prescription History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {history.length === 0 ? (
+                    <p className="text-center text-slate-400 py-8">No prescriptions found.</p>
+                  ) : (
+                    history.map((record: any) => (
+                      <div key={record.id} className="border rounded-lg p-4 bg-white hover:bg-slate-50 transition">
+                         <div className="flex justify-between items-start mb-3 border-b pb-2">
+                            <div className="flex items-center gap-2 text-slate-500 text-sm">
+                               <Calendar className="h-4 w-4" />
+                               {new Date(record.createdAt).toLocaleDateString()} at {new Date(record.createdAt).toLocaleTimeString()}
+                            </div>
+                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">
+                              ID: #{record.id}
+                            </span>
+                         </div>
+                         <div className="grid gap-2">
+                            {Array.isArray(record.medicines) && record.medicines.map((med: any, i: number) => (
+                                <div key={i} className="flex justify-between text-sm text-slate-700">
+                                   <span className="font-medium">• {med.name}</span>
+                                   <span className="text-slate-500">{med.dosage} ({med.frequency})</span>
+                                </div>
+                            ))}
+                         </div>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+             </Card>
+          </TabsContent>
+
+          {/* 2. MEDICAL REPORTS (Upload & View) */}
+          <TabsContent value="reports" className="mt-6 space-y-6">
+             
+             {/* Upload Section */}
+             <Card className="border-dashed border-2 border-slate-300 bg-slate-50">
+                <CardHeader>
+                   <CardTitle className="text-base text-slate-600">Upload New Report (PDF)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                   <form action={handleUpload} className="flex gap-4 items-center">
+                      <input type="hidden" name="nic" value={nic} />
+                      <Input type="file" name="file" accept="application/pdf" required className="bg-white" />
+                      <Button type="submit" disabled={isUploading} className="bg-green-600 hover:bg-green-700">
+                         {isUploading ? "Uploading..." : <><UploadCloud className="mr-2 h-4 w-4" /> Upload</>}
+                      </Button>
+                   </form>
+                </CardContent>
+             </Card>
+
+             {/* Reports List */}
+             <Card>
+                <CardHeader><CardTitle>My Documents</CardTitle></CardHeader>
+                <CardContent className="space-y-2">
+                   {reports.length === 0 ? (
+                      <p className="text-center text-slate-400 py-8">No documents uploaded.</p>
+                   ) : (
+                      reports.map((file: any) => (
+                         <div key={file.id} className="flex items-center justify-between p-3 border rounded bg-white">
+                            <div className="flex items-center gap-3">
+                               <div className="bg-red-100 p-2 rounded text-red-600">
+                                  <FileText className="h-5 w-5" />
+                               </div>
+                               <div>
+                                  <p className="font-medium text-slate-800">{file.fileName}</p>
+                                  <p className="text-xs text-slate-500">{new Date(file.uploadedAt).toLocaleDateString()}</p>
+                               </div>
+                            </div>
+                            <a href={file.fileData} download={file.fileName}>
+                               <Button variant="outline" size="sm">
+                                  <Download className="h-4 w-4 mr-2" /> Download
+                               </Button>
+                            </a>
+                         </div>
+                      ))
+                   )}
+                </CardContent>
+             </Card>
+          </TabsContent>
+
+          {/* 3. PROFILE DETAILS */}
+          <TabsContent value="profile" className="mt-6">
+             <Card>
+               <CardHeader><CardTitle>Patient Details</CardTitle></CardHeader>
+               <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                     <div>
+                        <p className="text-slate-500">Address</p>
+                        <p className="font-medium">{profile.address}</p>
+                     </div>
+                     <div>
+                        <p className="text-slate-500">Phone</p>
+                        <p className="font-medium">{profile.phone}</p>
+                     </div>
+                     <div>
+                        <p className="text-slate-500">Blood Type</p>
+                        <p className="font-medium">{profile.bloodType || "N/A"}</p>
+                     </div>
+                     <div>
+                        <p className="text-slate-500">Age</p>
+                        <p className="font-medium">{profile.age || "N/A"}</p>
+                     </div>
+                  </div>
+                  <div className="pt-4 border-t">
+                     <p className="text-slate-500 mb-2">Allergies</p>
+                     <div className="flex flex-wrap gap-2">
+                        {profile.allergies?.map((alg: string, i: number) => (
+                           <span key={i} className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-bold">
+                              {alg}
+                           </span>
+                        ))}
+                        {(!profile.allergies || profile.allergies.length === 0) && <span className="text-slate-400">None</span>}
+                     </div>
+                  </div>
+               </CardContent>
+             </Card>
+          </TabsContent>
+
+        </Tabs>
       </div>
     </div>
   );

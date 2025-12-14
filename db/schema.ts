@@ -82,3 +82,16 @@ export const pharmacies = pgTable("pharmacies", {
   
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// db/schema.ts
+
+// ... existing imports ...
+
+// 7. MEDICAL REPORTS (PDFs uploaded by patients)
+export const medicalReports = pgTable("medical_reports", {
+  id: serial("id").primaryKey(),
+  patientId: text("patient_id").notNull(),
+  fileName: text("file_name").notNull(),
+  fileData: text("file_data").notNull(), // Stores the PDF as a huge text string (Base64)
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});

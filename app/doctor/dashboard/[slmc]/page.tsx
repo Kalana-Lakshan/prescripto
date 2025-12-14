@@ -1,145 +1,145 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react"; 
-import QRCode from "react-qr-code";
+import React, { useEffect, useState, use } from "react";
+import { getDoctorProfile } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, CheckCircle, Stethoscope } from "lucide-react"; 
-import { toast } from "sonner";
-import { getQueue, acceptPatient, getDoctorProfile } from "./actions";
+import { Stethoscope, Building2, User, QrCode, Users, LogOut, Mail } from "lucide-react";
+import Link from "next/link";
 
-export default function DoctorQRPage({ params }: { params: Promise<{ slmc: string }> }) {
-  
+export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: string }> }) {
   const { slmc } = use(params);
-
-  const [baseUrl, setBaseUrl] = useState("");
-  const [queue, setQueue] = useState<any[]>([]);
-  const [doctorName, setDoctorName] = useState("Loading...");
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    setBaseUrl(window.location.origin);
-    
-    // 1. Fetch Doctor Name immediately
-    async function loadProfile() {
-      const doc = await getDoctorProfile(slmc);
-      if (doc) setDoctorName(doc.name);
-      else setDoctorName("Unknown Doctor");
+    async function load() {
+      const data = await getDoctorProfile(slmc);
+      setProfile(data);
     }
-    loadProfile();
-
-    // 2. Poll for queue
-    fetchQueue();
-    const interval = setInterval(fetchQueue, 5000);
-    return () => clearInterval(interval);
+    load();
   }, [slmc]);
 
-  const fetchQueue = async () => {
-    const data = await getQueue(slmc);
-    setQueue(data);
-  };
-
-  // UPDATED FUNCTION: Now accepts 'patientNic' and opens the new tab
-  const handleAccept = async (reqId: number, patientName: string, patientNic: string) => {
-    const result = await acceptPatient(reqId);
-    
-    if (result.success) {
-      toast.success(`Access Granted to ${patientName}`);
-      
-      // 1. Open the Patient Profile in a New Tab
-      window.open(`/doctor/patient/${patientNic}`, '_blank');
-      
-      // 2. Refresh the queue to remove them from the list
-      fetchQueue(); 
-    } else {
-        toast.error("Failed to accept request");
-    }
-  };
-
-  const qrData = `${baseUrl}/access/grant?doctor=${slmc}`;
+  if (!profile) return (
+    <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p className="text-slate-500">Loading Dashboard...</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 flex flex-col md:flex-row gap-6 justify-center max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center">
       
-      {/* LEFT: QR Code Panel */}
-      <Card className="w-full md:w-1/3 h-fit bg-white shadow-md border-t-4 border-blue-900">
-        <CardHeader className="bg-slate-50 border-b text-center pb-6">
-          <div className="mx-auto bg-blue-100 p-3 rounded-full w-fit mb-2">
-            <Stethoscope className="h-8 w-8 text-blue-900" />
-          </div>
-          <h1 className="text-xl font-bold text-slate-900">{doctorName}</h1>
-          <p className="text-sm font-medium text-slate-500">SLMC: {slmc}</p>
-        </CardHeader>
+      <div className="max-w-5xl w-full space-y-8">
         
-        <CardContent className="flex flex-col items-center py-8 space-y-4">
-          <div className="text-center space-y-1 mb-2">
-             <h2 className="font-semibold text-slate-800">Scan to Connect</h2>
-             <p className="text-xs text-slate-400">Patient Access Portal</p>
-          </div>
-
-          {baseUrl && (
-            <div className="p-4 bg-white border-4 border-slate-900 rounded-xl shadow-sm">
-              <QRCode value={qrData} size={180} />
+        {/* Header Section */}
+        <header className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div>
+                <h1 className="text-3xl font-bold text-slate-900">Welcome, {profile.name}</h1>
+                <p className="text-slate-500 flex items-center gap-2 mt-1">
+                    <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold">ONLINE</span>
+                    Dashboard Overview
+                </p>
             </div>
-          )}
-          
-          <p className="text-xs text-slate-400 text-center max-w-[200px] leading-relaxed">
-             Ask your patient to scan this QR code to grant you temporary access to their medical records.
-          </p>
-        </CardContent>
-      </Card>
+            <Link href="/">
+                <Button variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50">
+                    <LogOut className="h-4 w-4 mr-2" /> Sign Out
+                </Button>
+            </Link>
+        </header>
 
-      {/* RIGHT: The Waiting List */}
-      <Card className="w-full md:w-2/3 shadow-md border-t-4 border-green-600">
-        <CardHeader className="flex flex-row justify-between items-center border-b bg-slate-50">
-          <div>
-            <CardTitle className="text-lg">Waiting Room</CardTitle>
-            <p className="text-xs text-slate-500 mt-1">
-              {queue.length} {queue.length === 1 ? 'patient' : 'patients'} waiting for confirmation
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={fetchQueue} className="bg-white hover:bg-slate-100">
-            <RefreshCw className="h-3.5 w-3.5 mr-2" /> Refresh
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          {queue.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-slate-400 space-y-3">
-              <div className="bg-slate-100 p-4 rounded-full">
-                <RefreshCw className="h-6 w-6 opacity-20" />
-              </div>
-              <p>No active requests.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {queue.map((req) => (
-                <div key={req.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition duration-200">
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                      {req.patientName}
-                      <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">New</span>
-                    </h3>
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
-                       <span>NIC: <span className="font-mono text-slate-700">{req.patientId}</span></span>
-                       <span>•</span>
-                       <span className="text-xs">
-                         {new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                       </span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* LEFT: Profile Summary */}
+            <Card className="md:col-span-1 shadow-md h-fit border-t-4 border-blue-800">
+                <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-slate-800">
+                        <User className="h-5 w-5 text-blue-600" /> My Profile
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    
+                    {/* Specialization with Fallback */}
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Specialization</p>
+                        <div className="flex items-center gap-3 font-medium text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <Stethoscope className="h-5 w-5 text-blue-500" /> 
+                            {profile.specialization || "Not Provided"}
+                        </div>
                     </div>
-                  </div>
-                  <Button 
-                    className="bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all"
-                    // UPDATED: Passing req.patientId (NIC) to the handler
-                    onClick={() => handleAccept(req.id, req.patientName, req.patientId)}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" /> Accept
-                  </Button>
-                </div>
-              ))}
+
+                    {/* Hospital with Fallback */}
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Hospital</p>
+                        <div className="flex items-center gap-3 font-medium text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <Building2 className="h-5 w-5 text-blue-500" /> 
+                            {profile.hospital || "Not Provided"}
+                        </div>
+                    </div>
+
+                    {/* SLMC Number */}
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">SLMC Reg. No</p>
+                        <div className="flex items-center gap-3 font-mono text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <span className="text-sm font-bold bg-slate-200 px-2 rounded">ID</span>
+                            {profile.slmcNumber}
+                        </div>
+                    </div>
+
+                     {/* Email (Optional Addition) */}
+                     {profile.email && (
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 uppercase mb-1">Email</p>
+                            <div className="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 truncate">
+                                <Mail className="h-4 w-4 text-slate-400" />
+                                {profile.email}
+                            </div>
+                        </div>
+                     )}
+
+                </CardContent>
+            </Card>
+
+            {/* RIGHT: Action Buttons */}
+            <div className="md:col-span-2 space-y-6">
+                
+                {/* Button 1: QR Display */}
+                <Card className="hover:shadow-xl transition-all border-l-4 border-blue-600 cursor-pointer group hover:-translate-y-1 duration-200">
+                    <Link href={`/doctor/dashboard/${slmc}/qr`}>
+                        <CardContent className="flex items-center p-8 gap-6">
+                            <div className="bg-blue-100 p-5 rounded-full group-hover:bg-blue-600 transition-colors duration-300">
+                                <QrCode className="h-10 w-10 text-blue-700 group-hover:text-white transition-colors duration-300" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors">Show QR Code</h3>
+                                <p className="text-slate-500 mt-1">
+                                    Open the large QR display for the external monitor. Patients scan this to check in.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Link>
+                </Card>
+
+                {/* Button 2: Manage Queue */}
+                <Card className="hover:shadow-xl transition-all border-l-4 border-green-600 cursor-pointer group hover:-translate-y-1 duration-200">
+                    <Link href={`/doctor/dashboard/${slmc}/waiting-room`}>
+                        <CardContent className="flex items-center p-8 gap-6">
+                            <div className="bg-green-100 p-5 rounded-full group-hover:bg-green-600 transition-colors duration-300">
+                                <Users className="h-10 w-10 text-green-700 group-hover:text-white transition-colors duration-300" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-slate-800 group-hover:text-green-700 transition-colors">Manage Waiting Room</h3>
+                                <p className="text-slate-500 mt-1">
+                                    View the live patient queue, accept appointments, and open patient medical records.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Link>
+                </Card>
+
             </div>
-          )}
-        </CardContent>
-      </Card>
-      
+        </div>
+
+      </div>
     </div>
   );
 }
