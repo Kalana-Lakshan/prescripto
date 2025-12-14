@@ -1,21 +1,26 @@
-import { pgTable, serial, text, json, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, json, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 
 // 1. PATIENTS (The Profile)
 export const patients = pgTable("patients", {
   id: serial("id").primaryKey(),
   nic: text("nic").notNull().unique(), // The ID used for login/lookup
   
-  // Auth Info (Simple password for now)
+  // Auth Info
   password: text("password").notNull(), 
   
   // Demographics
   name: text("name").notNull(),
   address: text("address"),
-  phone: text("phone"), // Used for SMS notifications
+  phone: text("phone"), 
   
-  // Medical Data (Doctor Editable)
-  bloodType: text("blood_type"), 
-  allergies: json("allergies"),
+  // NEW: Age Field (Optional)
+  age: integer("age"),
+
+  // Medical Data
+  bloodType: text("blood_type"), // Optional by default
+  
+  // Changed from json to array for better compatibility with text lists
+  allergies: text("allergies").array(), 
   
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -29,48 +34,33 @@ export const prescriptions = pgTable("prescriptions", {
 });
 
 // 3. ACCESS LOGS (The Security Audit Trail)
-// Every time a doctor opens a file, we save a row here.
 export const accessLogs = pgTable("access_logs", {
   id: serial("id").primaryKey(),
   patientId: text("patient_id").notNull(),
-  doctorId: text("doctor_id").notNull(), // For now, can be "Dr. Smith"
-  
-  accessType: text("access_type").notNull(), // "QR_SCAN" or "MANUAL_OVERRIDE"
-  
-  // If Manual, we flag it to send an alert
+  doctorId: text("doctor_id").notNull(), 
+  accessType: text("access_type").notNull(), 
   alertSent: boolean("alert_sent").default(false),
-  
   accessedAt: timestamp("accessed_at").defaultNow(),
 });
 
 // 4. DOCTORS TABLE
 export const doctors = pgTable("doctors", {
   id: serial("id").primaryKey(),
-  
-  // Login & Identity
   name: text("name").notNull(),
-  email: text("email").notNull().unique(), // Used for login
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  
-  // Professional Details
-  slmcNumber: text("slmc_number").notNull().unique(), // The ID for the QR Code
-  specialization: text("specialization").notNull(), // e.g., "Cardiologist"
-  hospital: text("hospital"), // e.g., "National Hospital"
-  
+  slmcNumber: text("slmc_number").notNull().unique(), 
+  specialization: text("specialization").notNull(),
+  hospital: text("hospital"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// ... existing tables ...
 
 // 5. ACCESS REQUESTS (The Waiting Room Queue)
 export const accessRequests = pgTable("access_requests", {
   id: serial("id").primaryKey(),
-  doctorId: text("doctor_id").notNull(), // The Doctor receiving the request
-  patientId: text("patient_id").notNull(), // The Patient requesting
-  patientName: text("patient_name").notNull(), // Stored for quick display
-  
-  // Status: "pending" (waiting), "active" (in consultation), "completed"
+  doctorId: text("doctor_id").notNull(), 
+  patientId: text("patient_id").notNull(), 
+  patientName: text("patient_name").notNull(), 
   status: text("status").default("pending").notNull(), 
-  
   createdAt: timestamp("created_at").defaultNow(),
 });
