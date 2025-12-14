@@ -1,33 +1,37 @@
 "use server";
 
 import { db } from "@/db";
-import { patients, prescriptions, medicalReports, doctors } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { patients, prescriptions, medicalReports, notifications} from "@/db/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 // 1. Fetch Dashboard Data (Profile + History + Reports)
 export async function getPatientDashboardData(nic: string) {
   try {
-    // Get Profile
     const patientData = await db.select().from(patients).where(eq(patients.nic, nic)).limit(1);
     if (!patientData[0]) return null;
 
-    // Get Prescriptions (History)
     const prescriptionHistory = await db.select()
       .from(prescriptions)
       .where(eq(prescriptions.patientId, nic))
       .orderBy(desc(prescriptions.createdAt));
 
-    // Get Uploaded Reports
     const reports = await db.select()
       .from(medicalReports)
       .where(eq(medicalReports.patientId, nic))
       .orderBy(desc(medicalReports.uploadedAt));
 
+    // NEW: Fetch Notifications
+    const alertList = await db.select()
+      .from(notifications)
+      .where(eq(notifications.patientId, nic))
+      .orderBy(desc(notifications.createdAt));
+
     return {
       profile: patientData[0],
       history: prescriptionHistory,
-      reports: reports
+      reports: reports,
+      notifications: alertList // Return this
     };
   } catch (error) {
     console.error("Error fetching dashboard:", error);
@@ -35,6 +39,19 @@ export async function getPatientDashboardData(nic: string) {
   }
 }
 
+// 2. Mark Notification as Read (Action)
+export async function markAsRead(notificationId: number, nic: string) {
+    try {
+        await db.update(notifications)
+            .set({ isRead: true })
+            .where(eq(notifications.id, notificationId));
+        
+        revalidatePath(`/patient/dashboard/${nic}`);
+        return { success: true };
+    } catch (e) {
+        return { success: false };
+    }
+}
 // 2. Upload PDF Action
 export async function uploadMedicalReport(formData: FormData) {
   const nic = formData.get("nic") as string;

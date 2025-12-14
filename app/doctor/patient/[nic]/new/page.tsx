@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useState, use } from "react";
 // Import from the parent folder actions
-import { getPatientProfile, savePrescription } from "../actions"; 
+import { savePrescription } from "../actions"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Plus, Trash2, Save, Pill, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // 1. Added useSearchParams
 
 // Define the medicine type again
 interface Medicine {
@@ -24,6 +24,11 @@ interface Medicine {
 export default function NewPrescriptionPage({ params }: { params: Promise<{ nic: string }> }) {
   const { nic } = use(params);
   const router = useRouter();
+  
+  // 2. Get the Doctor ID from the URL query params
+  const searchParams = useSearchParams();
+  const doctorSlmc = searchParams.get("doctor");
+
   const [saving, setSaving] = useState(false);
   
   // Medicine List State
@@ -45,22 +50,41 @@ export default function NewPrescriptionPage({ params }: { params: Promise<{ nic:
   };
 
   const handleSave = async () => {
+    // 3. Validation: Check if Doctor ID exists
+    if (!doctorSlmc) {
+        toast.error("Session Error: Doctor ID is missing. Please return to dashboard.");
+        return;
+    }
+
     if (medList.length === 0) {
       toast.error("Add at least one medicine.");
       return;
     }
+    
     setSaving(true);
-    const result = await savePrescription(nic, medList);
+    
+    // 4. Update Function Call: Pass 'doctorSlmc' as the 3rd argument
+    const result = await savePrescription(nic, medList, doctorSlmc);
     
     if (result.success) {
       toast.success("Prescription Issued!");
       // Redirect back to the Profile View
-      router.push(`/doctor/patient/${nic}`);
+      router.push(`/doctor/patient/${nic}?doctor=${doctorSlmc}`); // Keep doctor ID in URL
     } else {
       toast.error(result.error);
     }
     setSaving(false);
   };
+
+  // 5. Optional: Block view if no doctor ID
+  if (!doctorSlmc) {
+      return (
+        <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+            <h1 className="text-red-500 font-bold">Error: Missing Doctor Identification</h1>
+            <Button onClick={() => router.back()}>Go Back</Button>
+        </div>
+      );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 flex justify-center">
@@ -68,11 +92,9 @@ export default function NewPrescriptionPage({ params }: { params: Promise<{ nic:
         
         {/* Header */}
         <div className="flex items-center justify-between">
-            <Link href={`/doctor/patient/${nic}`}>
-                <Button variant="ghost" className="text-slate-500">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Cancel & Go Back
-                </Button>
-            </Link>
+            <Button variant="ghost" onClick={() => router.back()} className="text-slate-500">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Cancel & Go Back
+            </Button>
             <h1 className="text-xl font-bold text-slate-800">New Prescription for {nic}</h1>
         </div>
 

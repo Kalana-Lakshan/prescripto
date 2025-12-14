@@ -4,7 +4,7 @@ import React, { useEffect, useState, use } from "react";
 import { getDoctorProfile } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Building2, User, QrCode, Users, LogOut, Mail } from "lucide-react";
+import { Stethoscope, Building2, User, QrCode, Users, LogOut, Mail, PlusCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: string }> }) {
@@ -29,7 +29,7 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: 
   return (
     <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center">
       
-      <div className="max-w-5xl w-full space-y-8">
+      <div className="max-w-6xl w-full space-y-8">
         
         {/* Header Section */}
         <header className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -47,10 +47,10 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: 
             </Link>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             
-            {/* LEFT: Profile Summary */}
-            <Card className="md:col-span-1 shadow-md h-fit border-t-4 border-blue-800">
+            {/* LEFT: Profile Summary (Takes 1 Column) */}
+            <Card className="lg:col-span-1 shadow-md h-fit border-t-4 border-blue-800">
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2 text-slate-800">
                         <User className="h-5 w-5 text-blue-600" /> My Profile
@@ -58,7 +58,6 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: 
                 </CardHeader>
                 <CardContent className="space-y-6">
                     
-                    {/* Specialization with Fallback */}
                     <div>
                         <p className="text-xs font-bold text-slate-400 uppercase mb-1">Specialization</p>
                         <div className="flex items-center gap-3 font-medium text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -67,7 +66,6 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: 
                         </div>
                     </div>
 
-                    {/* Hospital with Fallback */}
                     <div>
                         <p className="text-xs font-bold text-slate-400 uppercase mb-1">Hospital</p>
                         <div className="flex items-center gap-3 font-medium text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -76,7 +74,6 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: 
                         </div>
                     </div>
 
-                    {/* SLMC Number */}
                     <div>
                         <p className="text-xs font-bold text-slate-400 uppercase mb-1">SLMC Reg. No</p>
                         <div className="flex items-center gap-3 font-mono text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -85,7 +82,6 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: 
                         </div>
                     </div>
 
-                     {/* Email (Optional Addition) */}
                      {profile.email && (
                         <div>
                             <p className="text-xs font-bold text-slate-400 uppercase mb-1">Email</p>
@@ -99,42 +95,53 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ slmc: 
                 </CardContent>
             </Card>
 
-            {/* RIGHT: Action Buttons */}
-            <div className="md:col-span-2 space-y-6">
+            {/* RIGHT: Action Buttons (Takes 3 Columns & Uses a Grid) */}
+            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 
-                {/* Button 1: QR Display */}
-                <Card className="hover:shadow-xl transition-all border-l-4 border-blue-600 cursor-pointer group hover:-translate-y-1 duration-200">
-                    <Link href={`/doctor/dashboard/${slmc}/qr`}>
-                        <CardContent className="flex items-center p-8 gap-6">
-                            <div className="bg-blue-100 p-5 rounded-full group-hover:bg-blue-600 transition-colors duration-300">
-                                <QrCode className="h-10 w-10 text-blue-700 group-hover:text-white transition-colors duration-300" />
+                {/* 1. NEW PRESCRIPTION (For Walk-ins) */}
+                <Link href={`/doctor/dashboard/${slmc}/new-prescription`}>
+                    <Card className="h-full hover:shadow-xl transition-all border-t-4 border-blue-600 cursor-pointer group hover:-translate-y-1">
+                        <CardContent className="flex flex-col items-center justify-center p-6 text-center h-full space-y-4">
+                            <div className="bg-blue-100 p-4 rounded-full group-hover:bg-blue-600 transition-colors">
+                                <PlusCircle className="h-8 w-8 text-blue-700 group-hover:text-white transition-colors" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors">Show QR Code</h3>
-                                <p className="text-slate-500 mt-1">
-                                    Open the large QR display for the external monitor. Patients scan this to check in.
-                                </p>
+                                <h3 className="text-lg font-bold text-slate-800">Emergency Walk-ins</h3>
+                                <p className="text-sm text-slate-500 mt-1">Manual entry for walk-in patients.</p>
                             </div>
                         </CardContent>
-                    </Link>
-                </Card>
+                    </Card>
+                </Link>
 
-                {/* Button 2: Manage Queue */}
-                <Card className="hover:shadow-xl transition-all border-l-4 border-green-600 cursor-pointer group hover:-translate-y-1 duration-200">
-                    <Link href={`/doctor/dashboard/${slmc}/waiting-room`}>
-                        <CardContent className="flex items-center p-8 gap-6">
-                            <div className="bg-green-100 p-5 rounded-full group-hover:bg-green-600 transition-colors duration-300">
-                                <Users className="h-10 w-10 text-green-700 group-hover:text-white transition-colors duration-300" />
+                {/* 2. WAITING ROOM (For Queue) */}
+                <Link href={`/doctor/dashboard/${slmc}/waiting-room`}>
+                    <Card className="h-full hover:shadow-xl transition-all border-t-4 border-green-600 cursor-pointer group hover:-translate-y-1">
+                        <CardContent className="flex flex-col items-center justify-center p-6 text-center h-full space-y-4">
+                            <div className="bg-green-100 p-4 rounded-full group-hover:bg-green-600 transition-colors">
+                                <Users className="h-8 w-8 text-green-700 group-hover:text-white transition-colors" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold text-slate-800 group-hover:text-green-700 transition-colors">Manage Waiting Room</h3>
-                                <p className="text-slate-500 mt-1">
-                                    View the live patient queue, accept appointments, and open patient medical records.
-                                </p>
+                                <h3 className="text-lg font-bold text-slate-800">Waiting Room</h3>
+                                <p className="text-sm text-slate-500 mt-1">Manage live queue and accept patients.</p>
                             </div>
                         </CardContent>
-                    </Link>
-                </Card>
+                    </Card>
+                </Link>
+
+                {/* 3. SHOW QR (For Display) */}
+                <Link href={`/doctor/dashboard/${slmc}/qr`}>
+                    <Card className="h-full hover:shadow-xl transition-all border-t-4 border-purple-600 cursor-pointer group hover:-translate-y-1">
+                        <CardContent className="flex flex-col items-center justify-center p-6 text-center h-full space-y-4">
+                            <div className="bg-purple-100 p-4 rounded-full group-hover:bg-purple-600 transition-colors">
+                                <QrCode className="h-8 w-8 text-purple-700 group-hover:text-white transition-colors" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800">Show QR Code</h3>
+                                <p className="text-sm text-slate-500 mt-1">Display scan code on external monitor.</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </Link>
 
             </div>
         </div>

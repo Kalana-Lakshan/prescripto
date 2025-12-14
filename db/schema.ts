@@ -26,9 +26,18 @@ export const patients = pgTable("patients", {
 });
 
 // 2. PRESCRIPTIONS (The History)
+// db/schema.ts
+
+
 export const prescriptions = pgTable("prescriptions", {
   id: serial("id").primaryKey(),
-  patientId: text("patient_id").notNull(), // Links to patients.nic
+  patientId: text("patient_id").notNull(),
+  
+  // --- ADD THESE TWO LINES ---
+  doctorId: text("doctor_id").notNull(),     // Stores SLMC
+  doctorName: text("doctor_name").notNull(), // Stores "Dr. Name"
+  // ---------------------------
+
   medicines: json("medicines").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -94,4 +103,19 @@ export const medicalReports = pgTable("medical_reports", {
   fileName: text("file_name").notNull(),
   fileData: text("file_data").notNull(), // Stores the PDF as a huge text string (Base64)
   uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+// db/schema.ts
+
+
+// ... (keep existing tables) ...
+
+// 8. NOTIFICATIONS TABLE (New)
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  patientId: text("patient_id").notNull(), // Receiver
+  message: text("message").notNull(),      // e.g., "Dr. Perera accessed your profile"
+  type: text("type").default("access"),    // access | prescription | alert
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
