@@ -5,7 +5,7 @@ import { getPatientProfile } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, User, AlertTriangle, PlusCircle, ArrowLeft, Download, Calendar, Pill, Stethoscope } from "lucide-react";
+import { FileText, User, AlertTriangle, PlusCircle, ArrowLeft, Download, Calendar, Pill, Stethoscope, Clock } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -32,7 +32,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* Back & Header (Same as before) */}
+        {/* Back & Header */}
         <div className="flex justify-between items-center">
              <Button variant="ghost" onClick={() => router.back()}><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
              {doctorSlmc && (
@@ -42,7 +42,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
              )}
         </div>
 
-        {/* Identity Card & Alerts (Same as before) */}
+        {/* Identity Card & Alerts */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="md:col-span-2 border-t-4 border-blue-600 shadow-sm">
                 <CardContent className="p-6 flex gap-4">
@@ -74,7 +74,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
                 <TabsTrigger value="reports" className="rounded-t-lg data-[state=active]:bg-white data-[state=active]:border-b-0 border border-transparent px-6">Medical Reports</TabsTrigger>
             </TabsList>
 
-            {/* TAB 1: HISTORY (Updated) */}
+            {/* TAB 1: HISTORY */}
             <TabsContent value="history" className="mt-4">
                 <Card>
                     <CardContent className="p-0">
@@ -82,20 +82,38 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
                             <div className="divide-y divide-slate-100">
                                 {history.map((record: any) => (
                                     <div key={record.id} className="p-6 hover:bg-slate-50 transition">
-                                        {/* Row Header: Date & Doctor Name */}
+                                        
+                                        {/* UPDATED HEADER: Doctor Name (Left) | Date & Time (Right) */}
                                         <div className="flex justify-between items-center mb-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-bold flex items-center gap-2">
-                                                    <Calendar className="h-4 w-4" />
-                                                    {new Date(record.createdAt).toLocaleDateString()}
+                                            {/* Left Side: Doctor Info */}
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-blue-100 p-2 rounded-full text-blue-700">
+                                                    <Stethoscope className="h-5 w-5" />
                                                 </div>
-                                                <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
-                                                    <Stethoscope className="h-4 w-4 text-slate-400" />
-                                                    {/* DISPLAY DOCTOR NAME HERE */}
-                                                    Prescribed by {record.doctorName || "Unknown Doctor"}
+                                                <div>
+                                                    <h3 className="font-bold text-slate-800 text-lg">
+                                                        {record.doctorName || "Unknown Doctor"}
+                                                    </h3>
+                                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Prescribing Physician</p>
                                                 </div>
                                             </div>
-                                            <span className="text-xs text-slate-400">ID: #{record.id}</span>
+
+                                            {/* Right Side: Date & Time (Replaces ID) */}
+                                            <div className="flex items-center gap-3 text-sm text-slate-600 bg-white border px-3 py-1.5 rounded-lg shadow-sm">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                                    <span className="font-medium">
+                                                        {new Date(record.createdAt).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                <div className="w-px h-3 bg-slate-200"></div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                                    <span className="font-medium">
+                                                        {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {/* Medicine Table */}
@@ -112,10 +130,11 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
                                                 <tbody className="divide-y divide-slate-100">
                                                     {Array.isArray(record.medicines) && record.medicines.map((med: any, i: number) => (
                                                         <tr key={i}>
-                                                            <td className="px-4 py-2 font-medium text-slate-800">{med.name}</td>
+                                                            <td className="px-4 py-2 font-medium text-slate-800 flex items-center gap-2">
+                                                                <Pill className="h-3 w-3 text-blue-400" /> {med.name}
+                                                            </td>
                                                             <td className="px-4 py-2 text-slate-600">{med.dosage}</td>
                                                             <td className="px-4 py-2 text-blue-600 font-bold">{med.frequency}</td>
-                                                            {/* DISPLAY DURATION HERE */}
                                                             <td className="px-4 py-2 text-right text-slate-700">{med.duration}</td>
                                                         </tr>
                                                     ))}
@@ -130,7 +149,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
                 </Card>
             </TabsContent>
 
-            {/* TAB 2: REPORTS (Kept Simple) */}
+            {/* TAB 2: REPORTS */}
             <TabsContent value="reports" className="mt-4">
                 <Card>
                     <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
