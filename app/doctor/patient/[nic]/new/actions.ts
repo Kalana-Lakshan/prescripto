@@ -5,25 +5,28 @@ import { patients, doctors, prescriptions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-// 1. Fetch Patient Name (For the Header)
-export async function getPatientName(nic: string) {
+// 1. Fetch Patient Details (Name + Allergies)
+export async function getPatientDetails(nic: string) {
   try {
-    const result = await db.select({ name: patients.name })
+    const result = await db.select({ 
+        name: patients.name,
+        allergies: patients.allergies // Fetch allergies array
+      })
       .from(patients)
       .where(eq(patients.nic, nic))
       .limit(1);
       
-    return result[0]?.name || nic; // Return Name or fallback to NIC
+    // Return details or default
+    return result[0] || { name: nic, allergies: [] };
   } catch (e) {
     console.error("Error fetching patient:", e);
-    return nic;
+    return { name: nic, allergies: [] };
   }
 }
 
-// 2. Save Prescription Logic
+// 2. Save Prescription Logic (Unchanged)
 export async function savePrescription(patientNic: string, medicines: any[], doctorSlmc: string) {
   try {
-    // A. Fetch Doctor's Name (To store with the prescription)
     const doctorResult = await db.select({ name: doctors.name })
       .from(doctors)
       .where(eq(doctors.slmcNumber, doctorSlmc))
@@ -31,8 +34,6 @@ export async function savePrescription(patientNic: string, medicines: any[], doc
 
     const doctorName = doctorResult[0]?.name || "Unknown Doctor";
 
-    // B. Insert Prescription
-    // Note: We store medicines as a JSON object
     await db.insert(prescriptions).values({
       patientId: patientNic,
       doctorId: doctorSlmc,
@@ -42,7 +43,6 @@ export async function savePrescription(patientNic: string, medicines: any[], doc
       createdAt: new Date(),
     });
 
-    // C. Revalidate Paths (Refresh data on other pages)
     revalidatePath(`/doctor/patient/${patientNic}`); 
     revalidatePath(`/patient/dashboard/${patientNic}`);
     

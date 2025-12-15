@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
-// UPDATED IMPORT: Added getPatientName
-import { savePrescription, getPatientName } from "./actions";
+// UPDATED IMPORT: getPatientDetails instead of getPatientName
+import { savePrescription, getPatientDetails } from "./actions"; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Pill, ArrowLeft, User, Clock, Stethoscope } from "lucide-react";
+import { Plus, Trash2, Save, Pill, ArrowLeft, User, Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -27,19 +27,23 @@ export default function NewPrescriptionPage({ params }: { params: Promise<{ nic:
   const doctorSlmc = searchParams.get("doctor");
 
   const [saving, setSaving] = useState(false);
-  const [patientName, setPatientName] = useState(nic); // Default to NIC initially
+  
+  // Patient Data State
+  const [patientName, setPatientName] = useState(nic);
+  const [allergies, setAllergies] = useState<string[] | null>(null); // Null means loading
   
   // Medicine List State
   const [medList, setMedList] = useState<Medicine[]>([]);
   const [currentMed, setCurrentMed] = useState({ name: "", dosage: "", frequency: "", duration: "" });
 
-  // 1. Fetch Patient Name on Mount
+  // 1. Fetch Patient Details on Mount
   useEffect(() => {
-    async function loadName() {
-        const name = await getPatientName(nic);
-        setPatientName(name);
+    async function loadDetails() {
+        const data = await getPatientDetails(nic);
+        setPatientName(data.name);
+        setAllergies(data.allergies || []);
     }
-    loadName();
+    loadDetails();
   }, [nic]);
 
   const addMedicine = () => {
@@ -98,15 +102,33 @@ export default function NewPrescriptionPage({ params }: { params: Promise<{ nic:
                     <User className="h-4 w-4" /> for <span className="font-semibold text-blue-700">{patientName}</span>
                 </p>
             </div>
-            <div className="bg-white px-4 py-2 rounded-lg border shadow-sm flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-full">
-                    <Stethoscope className="h-5 w-5 text-blue-600" />
+
+            {/* ALLERGY STATUS CARD (Replaces Doctor ID) */}
+            {allergies === null ? (
+                <div className="bg-slate-100 px-4 py-3 rounded-lg animate-pulse w-48 h-12"></div>
+            ) : allergies.length > 0 ? (
+                <div className="bg-red-50 px-4 py-3 rounded-lg border border-red-200 shadow-sm flex items-center gap-3">
+                    <div className="bg-red-100 p-2 rounded-full">
+                        <AlertTriangle className="h-6 w-6 text-red-600 animate-pulse" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-red-500 uppercase font-bold tracking-wider">Critical Warning</p>
+                        <p className="font-bold text-red-800 text-sm">
+                            Allergic to: {allergies.join(", ")}
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <p className="text-xs text-slate-500 uppercase font-bold">Doctor ID</p>
-                    <p className="font-mono font-medium text-slate-700">{doctorSlmc}</p>
+            ) : (
+                <div className="bg-green-50 px-4 py-3 rounded-lg border border-green-200 shadow-sm flex items-center gap-3">
+                    <div className="bg-green-100 p-2 rounded-full">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-green-600 uppercase font-bold tracking-wider">Safety Check</p>
+                        <p className="font-bold text-green-800 text-sm">No Known Allergies</p>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
 
         {/* MAIN INPUT CARD */}
