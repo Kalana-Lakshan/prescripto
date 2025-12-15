@@ -1,14 +1,14 @@
 "use server";
 
 import { db } from "@/db";
-import { patients, prescriptions, medicalReports, doctors } from "@/db/schema"; // Import doctors table
+import { patients, prescriptions, medicalReports, doctors } from "@/db/schema"; 
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { unstable_noStore as noStore } from "next/cache";
 
-// 1. Fetch Patient Profile & History
+// 1. Fetch Patient Profile & History (UPDATED)
 export async function getPatientProfile(nic: string) {
-  noStore(); // Force fresh data
+  noStore(); 
 
   try {
     // 1. Get Personal Info
@@ -19,9 +19,18 @@ export async function getPatientProfile(nic: string) {
 
     if (patientData.length === 0) return null;
 
-    // 2. Get Past Prescriptions
-    const history = await db.select()
+    // 2. Get Past Prescriptions with Doctor Specialization (UPDATED JOIN)
+    const history = await db.select({
+        id: prescriptions.id,
+        createdAt: prescriptions.createdAt,
+        medicines: prescriptions.medicines,
+        doctorName: prescriptions.doctorName,
+        // New Field: Fetch Specialization
+        doctorSpecialization: doctors.specialization, 
+      })
       .from(prescriptions)
+      // Join Prescriptions -> Doctors on DoctorID
+      .leftJoin(doctors, eq(prescriptions.doctorId, doctors.slmcNumber))
       .where(eq(prescriptions.patientId, nic))
       .orderBy(desc(prescriptions.createdAt));
 
@@ -43,7 +52,7 @@ export async function getPatientProfile(nic: string) {
   }
 }
 
-// 2. UPDATED: Save Prescription (With Doctor Identity)
+// 2. Save Prescription (Unchanged)
 export async function savePrescription(patientId: string, medicines: any[], doctorSlmc: string) {
   if (!medicines || medicines.length === 0) {
     return { success: false, error: "Prescription cannot be empty." };
@@ -53,7 +62,7 @@ export async function savePrescription(patientId: string, medicines: any[], doct
   }
 
   try {
-    // A. Lookup Doctor Name (to ensure history is accurate)
+    // A. Lookup Doctor Name
     const doctorRecord = await db.select()
       .from(doctors)
       .where(eq(doctors.slmcNumber, doctorSlmc))
@@ -64,12 +73,12 @@ export async function savePrescription(patientId: string, medicines: any[], doct
     // B. Save to Database
     await db.insert(prescriptions).values({
       patientId: patientId,
-      doctorId: doctorSlmc,   // Store the ID
-      doctorName: doctorName, // Store the Name (Dr. X)
-      medicines: medicines,   // Stores the full list (Name, Dosage, Freq, Duration)
+      doctorId: doctorSlmc,   
+      doctorName: doctorName, 
+      medicines: medicines,   
     });
 
-    // C. Revalidate Paths (Instant Updates)
+    // C. Revalidate Paths
     revalidatePath(`/doctor/patient/${patientId}`);
     revalidatePath(`/patient/dashboard/${patientId}`);
     revalidatePath(`/pharmacy/search`); 

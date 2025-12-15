@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, use } from "react";
-import { getPatientProfile } from "./actions";
+import { getPatientProfile } from "./actions"; // Or "@/app/doctor/actions" depending on your structure
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -83,7 +83,6 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
                                 {history.map((record: any) => (
                                     <div key={record.id} className="p-6 hover:bg-slate-50 transition">
                                         
-                                        {/* UPDATED HEADER: Doctor Name (Left) | Date & Time (Right) */}
                                         <div className="flex justify-between items-center mb-4">
                                             {/* Left Side: Doctor Info */}
                                             <div className="flex items-center gap-3">
@@ -94,11 +93,14 @@ export default function PatientProfilePage({ params }: { params: Promise<{ nic: 
                                                     <h3 className="font-bold text-slate-800 text-lg">
                                                         {record.doctorName || "Unknown Doctor"}
                                                     </h3>
-                                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Prescribing Physician</p>
+                                                    {/* UPDATED: Show Specialization */}
+                                                    <p className="text-xs text-blue-600 uppercase tracking-wide font-bold">
+                                                        {record.doctorSpecialization || "General Physician"}
+                                                    </p>
                                                 </div>
                                             </div>
 
-                                            {/* Right Side: Date & Time (Replaces ID) */}
+                                            {/* Right Side: Date & Time */}
                                             <div className="flex items-center gap-3 text-sm text-slate-600 bg-white border px-3 py-1.5 rounded-lg shadow-sm">
                                                 <div className="flex items-center gap-1.5">
                                                     <Calendar className="h-3.5 w-3.5 text-slate-400" />
