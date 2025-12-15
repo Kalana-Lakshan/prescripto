@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, use } from "react";
-import { getPatientDashboardData, uploadMedicalReport, markAsRead } from "./actions"; // Added markAsRead
+import { getPatientDashboardData, uploadMedicalReport, markAsRead } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, FileText, UploadCloud, Pill, Download, Calendar, Siren, X, Bell } from "lucide-react"; // Added new icons
+import { User, FileText, UploadCloud, Pill, Download, Calendar, Siren, X, Bell } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -24,10 +24,9 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
     setData(result);
   }
 
-  // NEW: Function to dismiss alerts
   async function handleDismiss(id: number) {
     await markAsRead(id, nic);
-    loadData(); // Refresh to hide the banner
+    loadData();
     toast.success("Alert dismissed");
   }
 
@@ -46,17 +45,14 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
 
   if (!data) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
-  // Destructure notifications (default to empty array)
   const { profile, history, reports, notifications = [] } = data;
-
-  // Filter high-priority unread alerts for the banner
   const unreadAlerts = notifications.filter((n: any) => !n.isRead && n.type === 'alert');
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         
-        {/* --- 1. NEW: SECURITY ALERT BANNER --- */}
+        {/* ALERT BANNER */}
         {unreadAlerts.length > 0 && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                 {unreadAlerts.map((alert: any) => (
@@ -82,7 +78,7 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
             </div>
         )}
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
            <div className="flex items-center gap-4">
               <div className="bg-green-100 p-3 rounded-full">
@@ -98,9 +94,8 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
            </Link>
         </div>
 
-        {/* Main Content Tabs */}
+        {/* TABS */}
         <Tabs defaultValue="prescriptions" className="w-full">
-          {/* UPDATED: Changed grid-cols-3 to grid-cols-4 to fit Notifications */}
           <TabsList className="grid w-full grid-cols-4 h-12">
             <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -112,7 +107,7 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
             </TabsTrigger>
           </TabsList>
 
-          {/* 1. PRESCRIPTION HISTORY */}
+          {/* 1. PRESCRIPTION HISTORY TAB */}
           <TabsContent value="prescriptions" className="mt-6">
              <Card>
                 <CardHeader>
@@ -126,21 +121,32 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
                   ) : (
                     history.map((record: any) => (
                       <div key={record.id} className="border rounded-lg p-4 bg-white hover:bg-slate-50 transition">
-                         <div className="flex justify-between items-start mb-3 border-b pb-2">
-                            <div className="flex items-center gap-2 text-slate-500 text-sm">
-                               <Calendar className="h-4 w-4" />
-                               {new Date(record.createdAt).toLocaleDateString()}
-                               {/* Show Doctor Name if available */}
-                               {record.doctorName && <span className="font-bold text-slate-700 ml-1">- {record.doctorName}</span>}
+                         
+                         {/* UPDATED HEADER: Doctor Name (Left) | Date & Time (Right) */}
+                         <div className="flex justify-between items-center mb-3 border-b pb-2">
+                            <div className="font-bold text-slate-700 text-lg">
+                               {record.doctorName || "Doctor"}
                             </div>
-                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">
-                              ID: #{record.id}
-                            </span>
+                            <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
+                               <Calendar className="h-3 w-3" />
+                               {new Date(record.createdAt).toLocaleDateString()} 
+                               <span className="text-slate-300">|</span>
+                               {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
                          </div>
+
+                         {/* MEDICINE LIST */}
                          <div className="grid gap-2">
                             {Array.isArray(record.medicines) && record.medicines.map((med: any, i: number) => (
                                 <div key={i} className="flex justify-between text-sm text-slate-700">
-                                   <span className="font-medium">• {med.name}</span>
+                                   <div className="flex flex-col">
+                                       <span className="font-medium">• {med.name}</span>
+                                       {med.duration && (
+                                            <span className="text-xs text-slate-400 pl-3">
+                                                Duration: {med.duration}
+                                            </span>
+                                       )}
+                                   </div>
                                    <span className="text-slate-500">{med.dosage} ({med.frequency})</span>
                                 </div>
                             ))}
@@ -152,9 +158,8 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
              </Card>
           </TabsContent>
 
-          {/* 2. MEDICAL REPORTS */}
+          {/* 2. REPORTS TAB */}
           <TabsContent value="reports" className="mt-6 space-y-6">
-             {/* Upload Section */}
              <Card className="border-dashed border-2 border-slate-300 bg-slate-50">
                 <CardHeader>
                    <CardTitle className="text-base text-slate-600">Upload New Report (PDF)</CardTitle>
@@ -170,7 +175,6 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
                 </CardContent>
              </Card>
 
-             {/* Reports List */}
              <Card>
                 <CardHeader><CardTitle>My Documents</CardTitle></CardHeader>
                 <CardContent className="space-y-2">
@@ -178,29 +182,29 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
                       <p className="text-center text-slate-400 py-8">No documents uploaded.</p>
                    ) : (
                       reports.map((file: any) => (
-                         <div key={file.id} className="flex items-center justify-between p-3 border rounded bg-white">
-                            <div className="flex items-center gap-3">
-                               <div className="bg-red-100 p-2 rounded text-red-600">
-                                  <FileText className="h-5 w-5" />
-                               </div>
-                               <div>
-                                  <p className="font-medium text-slate-800">{file.fileName}</p>
-                                  <p className="text-xs text-slate-500">{new Date(file.uploadedAt).toLocaleDateString()}</p>
-                               </div>
-                            </div>
-                            <a href={file.fileData} download={file.fileName}>
-                               <Button variant="outline" size="sm">
-                                  <Download className="h-4 w-4 mr-2" /> Download
-                               </Button>
-                            </a>
-                         </div>
+                          <div key={file.id} className="flex items-center justify-between p-3 border rounded bg-white">
+                             <div className="flex items-center gap-3">
+                                <div className="bg-red-100 p-2 rounded text-red-600">
+                                   <FileText className="h-5 w-5" />
+                                </div>
+                                <div>
+                                   <p className="font-medium text-slate-800">{file.fileName}</p>
+                                   <p className="text-xs text-slate-500">{new Date(file.uploadedAt).toLocaleDateString()}</p>
+                                </div>
+                             </div>
+                             <a href={file.fileData} download={file.fileName}>
+                                <Button variant="outline" size="sm">
+                                   <Download className="h-4 w-4 mr-2" /> Download
+                                </Button>
+                             </a>
+                          </div>
                       ))
                    )}
                 </CardContent>
              </Card>
           </TabsContent>
 
-          {/* 3. PROFILE DETAILS */}
+          {/* 3. PROFILE TAB */}
           <TabsContent value="profile" className="mt-6">
              <Card>
                <CardHeader><CardTitle>Patient Details</CardTitle></CardHeader>
@@ -238,7 +242,7 @@ export default function PatientDashboard({ params }: { params: Promise<{ nic: st
              </Card>
           </TabsContent>
 
-          {/* 4. NEW: NOTIFICATIONS TAB */}
+          {/* 4. NOTIFICATIONS TAB */}
           <TabsContent value="notifications" className="mt-6">
             <Card>
                 <CardHeader><CardTitle>Access Logs & Notifications</CardTitle></CardHeader>
