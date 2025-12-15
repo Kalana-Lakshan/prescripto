@@ -1,27 +1,41 @@
 "use server";
 
 import { db } from "@/db";
-import { patients, prescriptions, medicalReports, notifications} from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+// UPDATED: Added 'doctors' to imports for the join
+import { patients, prescriptions, medicalReports, notifications, doctors } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-// 1. Fetch Dashboard Data (Profile + History + Reports)
+// 1. Fetch Dashboard Data (Profile + History + Reports + Notifications)
 export async function getPatientDashboardData(nic: string) {
   try {
+    // A. Get Patient Profile
     const patientData = await db.select().from(patients).where(eq(patients.nic, nic)).limit(1);
     if (!patientData[0]) return null;
 
-    const prescriptionHistory = await db.select()
+    // B. Get Prescription History with Specialization (UPDATED)
+    const prescriptionHistory = await db.select({
+        id: prescriptions.id,
+        createdAt: prescriptions.createdAt,
+        medicines: prescriptions.medicines,
+        status: prescriptions.status,
+        doctorName: prescriptions.doctorName,
+        // Fetch Specialization from Doctors table
+        doctorSpecialization: doctors.specialization, 
+      })
       .from(prescriptions)
+      // Join Prescriptions -> Doctors table
+      .leftJoin(doctors, eq(prescriptions.doctorId, doctors.slmcNumber))
       .where(eq(prescriptions.patientId, nic))
       .orderBy(desc(prescriptions.createdAt));
 
+    // C. Get Reports
     const reports = await db.select()
       .from(medicalReports)
       .where(eq(medicalReports.patientId, nic))
       .orderBy(desc(medicalReports.uploadedAt));
 
-    // NEW: Fetch Notifications
+    // D. Get Notifications
     const alertList = await db.select()
       .from(notifications)
       .where(eq(notifications.patientId, nic))
@@ -31,15 +45,16 @@ export async function getPatientDashboardData(nic: string) {
       profile: patientData[0],
       history: prescriptionHistory,
       reports: reports,
-      notifications: alertList // Return this
+      notifications: alertList 
     };
+
   } catch (error) {
     console.error("Error fetching dashboard:", error);
     return null;
   }
 }
 
-// 2. Mark Notification as Read (Action)
+// 2. Mark Notification as Read
 export async function markAsRead(notificationId: number, nic: string) {
     try {
         await db.update(notifications)
@@ -52,7 +67,8 @@ export async function markAsRead(notificationId: number, nic: string) {
         return { success: false };
     }
 }
-// 2. Upload PDF Action
+
+// 3. Upload PDF Action
 export async function uploadMedicalReport(formData: FormData) {
   const nic = formData.get("nic") as string;
   const file = formData.get("file") as File;
