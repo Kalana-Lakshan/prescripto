@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState, use } from "react";
-import { getPharmacyProfile } from "./actions";
+import { getPharmacyProfile } from "@/app/pharmacy/actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pill, QrCode, LogOut } from "lucide-react";
+import { LogOut, ClipboardList, QrCode, User, MapPin, Hash, Phone } from "lucide-react";
 import Link from "next/link";
 
 export default function PharmacyDashboard({ params }: { params: Promise<{ license: string }> }) {
@@ -19,63 +19,106 @@ export default function PharmacyDashboard({ params }: { params: Promise<{ licens
     load();
   }, [license]);
 
-  if (!profile) return <div className="p-10 text-center">Loading Pharmacy...</div>;
+  if (!profile) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">
+      Loading Dashboard...
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-amber-50 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center">
+      <div className="max-w-7xl w-full space-y-6">
         
-        {/* Header */}
-        <header className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border-b-4 border-amber-500">
-          <div className="flex items-center gap-3">
-            <div className="bg-amber-100 p-2 rounded-full">
-              <Pill className="h-6 w-6 text-amber-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-800">{profile.name}</h1>
-              <p className="text-xs text-slate-500">Lic: {profile.licenseNumber}</p>
+        {/* 1. TOP HEADER (Matches "Welcome, Dr..." style) */}
+        <div className="bg-white rounded-xl shadow-sm border p-6 flex flex-col md:flex-row justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">
+              Welcome, {profile.name}
+            </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                Online
+              </span>
+              <span className="text-slate-500 text-sm">Dashboard Overview</span>
             </div>
           </div>
           <Link href="/">
-             <Button variant="ghost" size="sm" className="text-slate-500">
-               <LogOut className="h-4 w-4 mr-2" /> Logout
-             </Button>
+            <Button variant="outline" className="text-red-600 border-red-100 hover:bg-red-50 gap-2 mt-4 md:mt-0">
+              <LogOut className="h-4 w-4"/> Sign Out
+            </Button>
           </Link>
-        </header>
-
-        {/* Main Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Action 1: Scan QR */}
-          <Card className="hover:shadow-lg transition cursor-pointer border-l-4 border-blue-500">
-            <CardContent className="flex flex-col items-center justify-center py-10 space-y-4">
-              <div className="bg-blue-100 p-6 rounded-full">
-                <QrCode className="h-12 w-12 text-blue-600" />
-              </div>
-              <div className="text-center">
-                <h2 className="text-xl font-bold text-slate-800">Dispense Medicine</h2>
-                <p className="text-slate-500 text-sm mt-1">
-                   Scan patient QR to view prescription
-                </p>
-              </div>
-              <Button className="bg-blue-600 hover:bg-blue-700">Open Scanner</Button>
-            </CardContent>
-          </Card>
-
-          {/* Action 2: History (Placeholder) */}
-          <Card className="hover:shadow-lg transition border-l-4 border-slate-300">
-             <CardHeader>
-               <CardTitle>Recent Dispensing</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <p className="text-slate-400 text-sm text-center py-8">
-                 No recent activity found.
-               </p>
-             </CardContent>
-          </Card>
-
         </div>
 
+        {/* 2. THREE-COLUMN DASHBOARD GRID */}
+        {/* We use h-[500px] to give the cards that tall, distinct look from the image */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:h-[500px]">
+            
+            {/* COLUMN 1: MY PROFILE (Blue Border) */}
+            <Card className="border-2 border-blue-600 shadow-md h-full flex flex-col">
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-blue-700 flex items-center gap-2 text-xl">
+                        <User className="h-5 w-5" /> My Profile
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-4 flex-1">
+                    
+                    {/* License Field */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pharmacy License</label>
+                        <div className="bg-slate-100 p-3 rounded-lg flex items-center gap-3 text-slate-700 font-medium">
+                            <Hash className="h-5 w-5 text-blue-500" />
+                            {profile.licenseNumber}
+                        </div>
+                    </div>
+
+                    {/* Address Field */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Location</label>
+                        <div className="bg-slate-100 p-3 rounded-lg flex items-center gap-3 text-slate-700 font-medium">
+                            <MapPin className="h-5 w-5 text-blue-500" />
+                            {profile.address}
+                        </div>
+                    </div>
+
+                    {/* Phone Field (if exists) */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact</label>
+                        <div className="bg-slate-100 p-3 rounded-lg flex items-center gap-3 text-slate-700 font-medium">
+                            <Phone className="h-5 w-5 text-blue-500" />
+                            {profile.phone || "No phone listed"}
+                        </div>
+                    </div>
+
+                </CardContent>
+            </Card>
+
+            {/* COLUMN 2: ORDER QUEUE (Green Border) */}
+            <Link href={`/pharmacy/dashboard/${license}/queue`} className="group h-full">
+                <Card className="border-2 border-green-500 shadow-md h-full hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col items-center justify-center text-center p-8">
+                    <div className="bg-green-100 p-6 rounded-full group-hover:bg-green-600 transition-colors mb-6">
+                        <ClipboardList className="h-12 w-12 text-green-600 group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Order Queue</h3>
+                    <p className="text-slate-500 max-w-[200px]">
+                        Manage live prescription orders and dispense medicines.
+                    </p>
+                </Card>
+            </Link>
+
+            {/* COLUMN 3: QR CODE (Purple Border) */}
+            <Link href={`/pharmacy/dashboard/${license}/qr`} className="group h-full">
+                <Card className="border-2 border-purple-500 shadow-md h-full hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col items-center justify-center text-center p-8">
+                    <div className="bg-purple-100 p-6 rounded-full group-hover:bg-purple-600 transition-colors mb-6">
+                        <QrCode className="h-12 w-12 text-purple-600 group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Show QR Code</h3>
+                    <p className="text-slate-500 max-w-[200px]">
+                        Display this code for patients to scan and check in.
+                    </p>
+                </Card>
+            </Link>
+
+        </div>
       </div>
     </div>
   );

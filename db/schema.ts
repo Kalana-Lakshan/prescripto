@@ -13,32 +13,34 @@ export const patients = pgTable("patients", {
   address: text("address"),
   phone: text("phone"), 
   
-  // NEW: Age Field (Optional)
+  // Age Field
   age: integer("age"),
 
   // Medical Data
-  bloodType: text("blood_type"), // Optional by default
+  bloodType: text("blood_type"), 
   
-  // Changed from json to array for better compatibility with text lists
+  // Allergies as text array
   allergies: text("allergies").array(), 
   
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // 2. PRESCRIPTIONS (The History)
-// db/schema.ts
-
-
 export const prescriptions = pgTable("prescriptions", {
   id: serial("id").primaryKey(),
   patientId: text("patient_id").notNull(),
   
-  // --- ADD THESE TWO LINES ---
+  // Doctor Details
   doctorId: text("doctor_id").notNull(),     // Stores SLMC
   doctorName: text("doctor_name").notNull(), // Stores "Dr. Name"
-  // ---------------------------
 
+  // Medicine Data
   medicines: json("medicines").notNull(),
+
+  // NEW: Pharmacy Status Fields
+  status: text("status").default("issued"), // 'issued' | 'dispensed'
+  dispensedAt: timestamp("dispensed_at"),
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -64,7 +66,7 @@ export const doctors = pgTable("doctors", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// 5. ACCESS REQUESTS (The Waiting Room Queue)
+// 5. ACCESS REQUESTS (The Waiting Room Queue for Doctors)
 export const accessRequests = pgTable("access_requests", {
   id: serial("id").primaryKey(),
   doctorId: text("doctor_id").notNull(), 
@@ -73,8 +75,6 @@ export const accessRequests = pgTable("access_requests", {
   status: text("status").default("pending").notNull(), 
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// ... keep existing imports ...
 
 // 6. PHARMACIES TABLE
 export const pharmacies = pgTable("pharmacies", {
@@ -92,10 +92,6 @@ export const pharmacies = pgTable("pharmacies", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// db/schema.ts
-
-// ... existing imports ...
-
 // 7. MEDICAL REPORTS (PDFs uploaded by patients)
 export const medicalReports = pgTable("medical_reports", {
   id: serial("id").primaryKey(),
@@ -105,17 +101,29 @@ export const medicalReports = pgTable("medical_reports", {
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 
-// db/schema.ts
-
-
-// ... (keep existing tables) ...
-
-// 8. NOTIFICATIONS TABLE (New)
+// 8. NOTIFICATIONS TABLE
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   patientId: text("patient_id").notNull(), // Receiver
   message: text("message").notNull(),      // e.g., "Dr. Perera accessed your profile"
   type: text("type").default("access"),    // access | prescription | alert
   isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// 9. NEW: PHARMACY QUEUE (Orders waiting room)
+// ... existing imports
+
+// 9. PHARMACY QUEUE (Updated)
+export const pharmacyQueue = pgTable("pharmacy_queue", {
+  id: serial("id").primaryKey(),
+  pharmacyLicense: text("pharmacy_license").notNull(),
+  patientNic: text("patient_nic").notNull(),
+  patientName: text("patient_name").notNull(),
+  
+  // NEW COLUMN: Link to specific prescription
+  prescriptionId: integer("prescription_id"), 
+
+  status: text("status").default("pending"), 
   createdAt: timestamp("created_at").defaultNow(),
 });
