@@ -11,37 +11,35 @@ Built with Next.js 16 (App Router), TypeScript, Drizzle ORM, and PostgreSQL.
 Live website - https://prescripto-hazel-rho.vercel.app/
 
 📑 Table of Contents
-Overview
+- Overview
 
-Key Features
+- Key Features
 
-Tech Stack
+- Tech Stack
 
-System Architecture & Workflow
+- System Architecture & Workflow
 
-Database Schema
+- Database Schema
 
-Getting Started
+- Getting Started
 
-Project Structure
+- Project Structure
 
-Future Roadmap
-
-License
+- Future Roadmap
 
 🔭 Overview
-In traditional healthcare systems, handwritten prescriptions can be illegible, leading to medication errors. Furthermore, patients often lose physical records, and doctors lack visibility into a patient's dispensing history.
+- In traditional healthcare systems, handwritten prescriptions can be illegible, leading to medication errors. Furthermore, patients often lose physical records, and doctors lack visibility into a patient's dispensing history.
 
 Prescripto solves these problems by providing:
 
-For Doctors: A digital interface to view patient history and issue prescriptions with safety checks (allergy warnings).
+- For Doctors: A digital interface to view patient history and issue prescriptions with safety checks (allergy warnings).
 
-For Patients: A centralized dashboard to view medical history, prescriptions, and upload lab reports.
+- For Patients: A centralized dashboard to view medical history, prescriptions, and upload lab reports.
 
-For Pharmacies: A real-time queue management system to process and dispense incoming digital orders efficiently.
+- For Pharmacies: A real-time queue management system to process and dispense incoming digital orders efficiently.
 
 🌟 Key Features
-👨‍⚕️ Doctor Portal
+- 👨‍⚕️ Doctor Portal
 Patient Lookup: Search for patients using their National Identity Card (NIC) number.
 
 Digital Prescribing: Create prescriptions with specific dosages, frequencies (TDS, BD, etc.), and durations.
@@ -52,7 +50,7 @@ Medical History: View the patient's full timeline of past prescriptions and disp
 
 Lab Report Access: View PDF medical reports uploaded by the patient.
 
-👤 Patient Dashboard
+- 👤 Patient Dashboard
 Secure Access: Personal login to view health records.
 
 Prescription History: A collapsible, detailed view of all past prescriptions, including the prescribing doctor and dispensing status.
@@ -63,7 +61,7 @@ Document Management: Upload and store medical reports (PDF format) securely.
 
 Notifications: View access logs and security alerts.
 
-🏥 Pharmacy Operations
+- 🏥 Pharmacy Operations
 Real-time Queue: Live view of incoming prescription orders assigned to the pharmacy.
 
 Order Processing: Detailed view of the prescription to ensure correct dispensing.
@@ -72,8 +70,8 @@ Dispensing History: A tracked record of all completed orders with precise timest
 
 Inventory Logic: (Foundation laid) Mark items as dispensed to close the loop.
 
-💻 Tech Stack
-Frontend
+- 💻 Tech Stack
+* Frontend
 Framework: Next.js 16 (App Router)
 
 Language: TypeScript
@@ -86,7 +84,7 @@ Icons: Lucide React
 
 Toasts: Sonner
 
-Backend
+* Backend
 Server Actions: Next.js Server Actions for mutations and data fetching.
 
 Database: PostgreSQL (Compatible with Neon/Supabase/Local).
@@ -95,7 +93,7 @@ ORM: Drizzle ORM for type-safe database interactions.
 
 Validation: Zod (implied usage for form validation).
 
-🔄 System Architecture & Workflow
+- 🔄 System Architecture & Workflow
 The system relies on a Centralized Database where all three actors interact in real-time.
 
 Prescription Creation:
@@ -118,7 +116,7 @@ System updates pharmacy_queue status to completed and prescriptions status to di
 
 Timestamps (updatedAt, dispensedAt) are recorded.
 
-🗄️ Database Schema
+- 🗄️ Database Schema
 The project uses a relational schema defined in db/schema.ts. Key tables include:
 
 patients: Stores demographics, authentication, and the critical allergies array.
@@ -135,7 +133,7 @@ notifications: Stores system alerts and access logs.
 
 (See db/schema.ts for the full Drizzle definition)
 
-🚀 Getting Started
+- 🚀 Getting Started
 Follow these steps to set up the project locally.
 
 Prerequisites
