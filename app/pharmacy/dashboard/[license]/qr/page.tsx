@@ -54,7 +54,7 @@ export default function PharmacyQRPage({ params }: { params: Promise<{ license: 
       <div className="text-center space-y-8 max-w-2xl animate-in fade-in zoom-in duration-500 w-full">
         
         <div className="space-y-2">
-            <h1 className="text-4xl font-bold">Pharmacy Check-in</h1>
+            <h1 className="text-4xl font-bold">Welcome to Prescripto</h1>
             <p className="text-teal-200 text-xl print:text-slate-600">Scan to join the order queue</p>
         </div>
 
