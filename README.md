@@ -144,8 +144,7 @@ PostgreSQL database (Local or Cloud like Neon.tech)
 Installation
 Clone the Repository
 ```bash
-git clone https://github.com/your-username/prescripto.git
-cd prescripto
+git clone https://github.com/Kalana-Lakshan/prescripto.git
 ```
 
 Install Dependencies
