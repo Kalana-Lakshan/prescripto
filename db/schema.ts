@@ -111,9 +111,6 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// 9. NEW: PHARMACY QUEUE (Orders waiting room)
-// ... existing imports
-
 // 9. PHARMACY QUEUE (Updated)
 export const pharmacyQueue = pgTable("pharmacy_queue", {
   id: serial("id").primaryKey(),
@@ -121,9 +118,12 @@ export const pharmacyQueue = pgTable("pharmacy_queue", {
   patientNic: text("patient_nic").notNull(),
   patientName: text("patient_name").notNull(),
   
-  // NEW COLUMN: Link to specific prescription
+  // Link to specific prescription
   prescriptionId: integer("prescription_id"), 
 
   status: text("status").default("pending"), 
+  
+  // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(), // <--- ADDED THIS FIELD
 });
