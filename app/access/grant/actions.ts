@@ -1,15 +1,17 @@
 "use server";
 
 import { db } from "@/db";
-import { patients, accessRequests } from "@/db/schema";
+// 1. UPDATED IMPORT: Added 'doctors'
+import { patients, accessRequests, doctors } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { unstable_noStore as noStore } from "next/cache"; // Force fresh data
+import { unstable_noStore as noStore } from "next/cache"; 
 
+// 1. Create Access Request (Join Queue)
 export async function createAccessRequest(formData: FormData, doctorId: string) {
   const nic = formData.get("nic") as string;
 
   try {
-    // 1. Verify Patient Exists
+    // A. Verify Patient Exists
     const patientList = await db.select().from(patients).where(eq(patients.nic, nic));
     const patient = patientList[0];
 
@@ -17,7 +19,7 @@ export async function createAccessRequest(formData: FormData, doctorId: string) 
       return { success: false, error: "Patient NIC not found. Please register first." };
     }
 
-    // 2. Add to Queue
+    // B. Add to Queue
     await db.insert(accessRequests).values({
       doctorId: doctorId,
       patientId: nic,
@@ -33,7 +35,7 @@ export async function createAccessRequest(formData: FormData, doctorId: string) 
   }
 }
 
-// NEW: Check if the doctor has accepted the patient
+// 2. Check Request Status (Polling)
 export async function checkRequestStatus(nic: string, doctorId: string) {
   noStore(); // Crucial: Never cache this response
 
@@ -55,6 +57,23 @@ export async function checkRequestStatus(nic: string, doctorId: string) {
     return { status: requests[0].status }; 
 
   } catch (error) {
+    return null;
+  }
+}
+
+// 3. NEW: Get Doctor Name by SLMC ID
+export async function getDoctorName(slmc: string) {
+  noStore();
+  try {
+    const result = await db.select({ name: doctors.name })
+      .from(doctors)
+      .where(eq(doctors.slmcNumber, slmc))
+      .limit(1);
+      
+    // Return name if found, otherwise null
+    return result[0]?.name || null;
+  } catch (e) {
+    console.error("Error fetching doctor name:", e);
     return null;
   }
 }
