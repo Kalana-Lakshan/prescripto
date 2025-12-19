@@ -4,6 +4,10 @@
   <img src="./public/dashboard.png" alt="Prescripto Dashboard" />
 </p>
 
+<p align="center">
+  <img src="./public/image.png" alt="Doctor Dashboard" />
+</p>
+
 Prescripto is a modern, full-stack web application designed to bridge the gap between Patients, Doctors, and Pharmacies. It digitizes the traditional prescription workflow, reducing errors, improving patient safety via allergy alerts, and streamlining pharmacy operations through a real-time queue system.
 
 Built with Next.js 16 (App Router), TypeScript, Drizzle ORM, and PostgreSQL.
